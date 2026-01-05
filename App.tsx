@@ -3,14 +3,14 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { 
   Plus, Settings, Crosshair, Move, Flame, Zap, Trash2, Target, X, 
   ChevronLeft, MousePointer2, Activity, Eye, Loader2, 
-  Rocket, ShieldCheck, Shield, Mouse, Cpu, Keyboard, 
+  Rocket, ShieldCheck, Shield, Mouse, Keyboard, 
   RefreshCw, Smartphone, CheckCircle2,
   Terminal, Monitor, Radio, Power, MousePointer,
   ChevronRight, Gauge, SlidersHorizontal,
   Info, ZapOff, Lock, Unlock, Wifi, HardDrive, Cpu as CpuIcon,
-  ShieldAlert
+  ShieldAlert, Timer, Fingerprint, MoveUpRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight
 } from 'lucide-react';
-import { Game, MappingControl, ControlType, MappingProfile, SensitivitySettings, AppConfig, DeviceHardware } from './types';
+import { Game, MappingControl, ControlType, MappingProfile, SensitivitySettings, AppConfig, DeviceHardware, MacroStep } from './types';
 
 const AXIS_LOGO_URL = "https://i.ibb.co/Xf8YV9C/Axis-Key-Logo.png";
 
@@ -19,11 +19,18 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'SHIZUKU' | 'WIRELESS'>('SHIZUKU');
   
   const [appConfig, setAppConfig] = useState<AppConfig>(() => {
-    const saved = localStorage.getItem('axiskey_v18_cfg');
-    return saved ? JSON.parse(saved) : { 
-      showOnboarding: true, themeColor: '#0e62fe', language: 'pt-BR', 
-      hapticFeedback: true, showFps: true, activationStatus: 'INACTIVE', activationMethod: 'NONE'
-    };
+    try {
+      const saved = localStorage.getItem('axiskey_v18_cfg');
+      return saved ? JSON.parse(saved) : { 
+        showOnboarding: true, themeColor: '#0e62fe', language: 'pt-BR', 
+        hapticFeedback: true, showFps: true, activationStatus: 'INACTIVE', activationMethod: 'NONE'
+      };
+    } catch (e) {
+      return { 
+        showOnboarding: true, themeColor: '#0e62fe', language: 'pt-BR', 
+        hapticFeedback: true, showFps: true, activationStatus: 'INACTIVE', activationMethod: 'NONE'
+      };
+    }
   });
 
   const [hardware, setHardware] = useState<DeviceHardware>({
@@ -41,36 +48,39 @@ const App: React.FC = () => {
   const [isActivating, setIsActivating] = useState(false);
 
   const [games, setGames] = useState<Game[]>(() => {
-    const saved = localStorage.getItem('axiskey_v18_games');
-    const db = [
-      { id: 'ff-01', name: 'Free Fire MAX', packageId: 'com.dts.freefiremax', icon: 'https://play-lh.googleusercontent.com/6_2n07n_kK88VjA2iL6uF1R2_zK0Y3y1UfJ_Vp-r8j8_0B_Z_8J6Z_8J6Z_8J6Z_8J6=w240-h480-rw', compatibility: 100 },
-      { id: 'cod-01', name: 'COD: Mobile', packageId: 'com.activision.callofduty.shooter', icon: 'https://play-lh.googleusercontent.com/9v1W_8M8M8M8M8M8M8M8M8M8M8M8M8M8M8M8M8M8=w240-h480-rw', compatibility: 98 }
-    ];
-    return saved ? JSON.parse(saved) : db.map(g => ({
-      ...g,
-      profile: {
-        id: Math.random().toString(36),
-        name: g.name,
-        controls: [],
-        backgroundUrl: null,
-        lastModified: new Date().toISOString(),
-        sensitivity: {
-          xSensitivity: 0.85,
-          ySensitivity: 0.65,
-          tweaks: 16450,
-          lookSpeed: 1.0,
-          acceleration: false,
-          accelerationMultiplier: 1.0,
-          deadZone: 0.1,
-          scanRate: 1000,
-          smoothing: 1,
-          mousePollingRate: 1000
+    try {
+      const saved = localStorage.getItem('axiskey_v18_games');
+      const db = [
+        { id: 'ff-01', name: 'Free Fire MAX', packageId: 'com.dts.freefiremax', icon: 'https://play-lh.googleusercontent.com/6_2n07n_kK88VjA2iL6uF1R2_zK0Y3y1UfJ_Vp-r8j8_0B_Z_8J6Z_8J6Z_8J6Z_8J6=w240-h480-rw', compatibility: 100 },
+        { id: 'cod-01', name: 'COD: Mobile', packageId: 'com.activision.callofduty.shooter', icon: 'https://play-lh.googleusercontent.com/9v1W_8M8M8M8M8M8M8M8M8M8M8M8M8M8M8M8M8M8=w240-h480-rw', compatibility: 98 }
+      ];
+      return saved ? JSON.parse(saved) : db.map(g => ({
+        ...g,
+        profile: {
+          id: Math.random().toString(36),
+          name: g.name,
+          controls: [],
+          backgroundUrl: null,
+          lastModified: new Date().toISOString(),
+          sensitivity: {
+            xSensitivity: 0.85,
+            ySensitivity: 0.65,
+            tweaks: 16450,
+            lookSpeed: 1.0,
+            acceleration: false,
+            accelerationMultiplier: 1.0,
+            deadZone: 0.1,
+            scanRate: 1000,
+            smoothing: 1,
+            mousePollingRate: 1000
+          }
         }
-      }
-    }));
+      }));
+    } catch (e) {
+      return [];
+    }
   });
 
-  // Persistência automática
   useEffect(() => {
     localStorage.setItem('axiskey_v18_games', JSON.stringify(games));
     localStorage.setItem('axiskey_v18_cfg', JSON.stringify(appConfig));
@@ -160,9 +170,11 @@ const App: React.FC = () => {
       type,
       x: 50,
       y: 50,
-      key: type === 'WASD' ? 'WASD' : (type === 'VISTA' ? 'F1' : (type === 'FIRE' ? 'LMB' : '?')),
+      key: type === 'WASD' ? 'WASD' : (type === 'VISTA' ? 'F1' : (type === 'FIRE' ? 'LMB' : (type === 'MACRO' ? 'M' : (type === 'TAP' ? '?' : (type === 'SWIPE' ? 'S' : '?'))))),
       size: type === 'WASD' ? 140 : 65,
-      opacity: 80
+      opacity: 80,
+      macroSteps: type === 'MACRO' ? [{ id: Math.random().toString(36).substring(7), key: 'E', delay: 50 }] : undefined,
+      swipeDirection: type === 'SWIPE' ? 'UP' : undefined
     };
     updateActiveProfile({ controls: [...currentProfile.controls, newControl] });
     setSelectedControlId(newControl.id);
@@ -173,10 +185,34 @@ const App: React.FC = () => {
     updateActiveProfile({ sensitivity: { ...currentProfile.sensitivity, ...updates } });
   };
 
+  const handleAddMacroStep = () => {
+    if (!selectedControl || selectedControl.type !== 'MACRO' || !currentProfile) return;
+    const newSteps = [...(selectedControl.macroSteps || []), { id: Math.random().toString(36).substring(7), key: '?', delay: 50 }];
+    updateActiveProfile({
+      controls: currentProfile.controls.map(c => c.id === selectedControl.id ? { ...c, macroSteps: newSteps } : c)
+    });
+  };
+
+  const handleUpdateMacroStep = (stepId: string, updates: Partial<MacroStep>) => {
+    if (!selectedControl || selectedControl.type !== 'MACRO' || !currentProfile) return;
+    const newSteps = selectedControl.macroSteps?.map(s => s.id === stepId ? { ...s, ...updates } : s);
+    updateActiveProfile({
+      controls: currentProfile.controls.map(c => c.id === selectedControl.id ? { ...c, macroSteps: newSteps } : c)
+    });
+  };
+
+  const handleRemoveMacroStep = (stepId: string) => {
+    if (!selectedControl || selectedControl.type !== 'MACRO' || !currentProfile) return;
+    const newSteps = selectedControl.macroSteps?.filter(s => s.id !== stepId);
+    updateActiveProfile({
+      controls: currentProfile.controls.map(c => c.id === selectedControl.id ? { ...c, macroSteps: newSteps } : c)
+    });
+  };
+
   return (
     <div className="h-screen bg-[#090c13] text-white flex flex-col font-sans overflow-hidden relative select-none touch-none">
       
-      {/* PERFORMANCE HUD (VISÍVEL APENAS NO MAPPER OU HOME) */}
+      {/* PERFORMANCE HUD */}
       <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-5 bg-black/90 backdrop-blur-3xl px-6 py-2.5 rounded-full border border-cyan-500/20 shadow-2xl pointer-events-none transition-all">
         <div className="flex items-center gap-2">
           <Activity size={12} className="text-cyan-400" />
@@ -319,16 +355,18 @@ const App: React.FC = () => {
               />
             ))}
 
-            {/* BARRA DE FERRAMENTAS DO MAPPER */}
             <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-[#161b22]/95 backdrop-blur-2xl p-2 rounded-[2.2rem] border border-white/10 shadow-2xl z-[5000]">
               <ToolBtn icon={<Eye size={22}/>} active={!isHUDVisible} onClick={() => setIsHUDVisible(!isHUDVisible)} />
               <div className="w-px h-6 bg-white/10 mx-1"></div>
               <ToolBtn icon={<MousePointer2 size={22}/>} active={editMode} onClick={() => { setEditMode(!editMode); setSelectedControlId(null); }} />
               {editMode && (
                 <>
-                  <ToolBtn icon={<Move size={22}/>} onClick={() => handleAddControl('WASD')} />
-                  <ToolBtn icon={<Crosshair size={22}/>} onClick={() => handleAddControl('VISTA')} />
-                  <ToolBtn icon={<Flame size={22}/>} onClick={() => handleAddControl('FIRE')} />
+                  <ToolBtn icon={<Move size={22}/>} onClick={() => handleAddControl('WASD')} title="Movimentação" />
+                  <ToolBtn icon={<Fingerprint size={22}/>} onClick={() => handleAddControl('TAP')} title="Toque Simples" />
+                  <ToolBtn icon={<MoveUpRight size={22}/>} onClick={() => handleAddControl('SWIPE')} title="Deslizar" />
+                  <ToolBtn icon={<Crosshair size={22}/>} onClick={() => handleAddControl('VISTA')} title="Olhar" />
+                  <ToolBtn icon={<Flame size={22}/>} onClick={() => handleAddControl('FIRE')} title="Tiro" />
+                  <ToolBtn icon={<Terminal size={22}/>} onClick={() => handleAddControl('MACRO')} title="Macro" />
                 </>
               )}
               <div className="w-px h-6 bg-white/10 mx-1"></div>
@@ -337,12 +375,87 @@ const App: React.FC = () => {
             </div>
 
             {editMode && selectedControl && (
-              <div className="absolute bg-[#1c2128] border border-white/15 p-5 rounded-[2.5rem] shadow-2xl z-[6000] min-w-[200px] animate-in zoom-in-95" style={{ left: `${selectedControl.x}%`, top: `${Math.min(selectedControl.y + 12, 85)}%`, transform: 'translateX(-50%)' }}>
+              <div className="absolute bg-[#1c2128] border border-white/15 p-5 rounded-[2.5rem] shadow-2xl z-[6000] min-w-[280px] max-h-[70vh] overflow-y-auto no-scrollbar animate-in zoom-in-95" style={{ left: `${selectedControl.x}%`, top: `${Math.min(selectedControl.y + 12, 85)}%`, transform: 'translateX(-50%)' }}>
                 <div className="flex items-center justify-between mb-4 px-2">
                   <span className="text-[10px] font-black uppercase text-cyan-500 italic">{selectedControl.type} NODE</span>
-                  <button onClick={() => { updateActiveProfile({ controls: currentProfile!.controls.filter(c => c.id !== selectedControlId) }); setSelectedControlId(null); }} className="text-red-500/50"><Trash2 size={16}/></button>
+                  <button onClick={() => { updateActiveProfile({ controls: currentProfile!.controls.filter(c => c.id !== selectedControlId) }); setSelectedControlId(null); }} className="text-red-500/50 hover:text-red-500 active:scale-90"><Trash2 size={16}/></button>
                 </div>
-                <button onClick={() => setIsListeningForKey(true)} className="w-full py-4 bg-black/40 border border-white/5 rounded-2xl text-2xl font-black text-cyan-500 shadow-inner uppercase italic active:scale-95">{selectedControl.key}</button>
+                
+                <div className="space-y-4">
+                  {selectedControl.type === 'TAP' ? (
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase text-white/30 ml-2 italic">Definir Tecla</label>
+                      <input 
+                        type="text" 
+                        maxLength={1}
+                        placeholder="Ex: E"
+                        value={selectedControl.key === '?' ? '' : selectedControl.key}
+                        onChange={(e) => updateActiveProfile({ 
+                          controls: currentProfile!.controls.map(c => c.id === selectedControl.id ? { ...c, key: e.target.value.toUpperCase() || '?' } : c) 
+                        })}
+                        className="w-full py-4 bg-black/40 border border-white/5 rounded-2xl text-2xl font-black text-cyan-500 text-center shadow-inner uppercase italic focus:border-cyan-500 outline-none"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase text-white/30 ml-2 italic">Tecla de Ativação</label>
+                      <button onClick={() => setIsListeningForKey(true)} className="w-full py-4 bg-black/40 border border-white/5 rounded-2xl text-2xl font-black text-cyan-500 shadow-inner uppercase italic active:scale-95">{selectedControl.key}</button>
+                    </div>
+                  )}
+
+                  {selectedControl.type === 'SWIPE' && (
+                    <div className="space-y-2 pt-2">
+                      <label className="text-[9px] font-black uppercase text-white/30 ml-2 italic">Direção do Swipe</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {['UP', 'DOWN', 'LEFT', 'RIGHT'].map((dir) => (
+                          <button 
+                            key={dir}
+                            onClick={() => updateActiveProfile({ controls: currentProfile!.controls.map(c => c.id === selectedControl.id ? { ...c, swipeDirection: dir as any } : c) })}
+                            className={`p-3 rounded-xl border flex items-center justify-center transition-all ${selectedControl.swipeDirection === dir ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-black/20 border-white/5 text-white/20 hover:border-white/20'}`}
+                          >
+                            {dir === 'UP' && <ArrowUp size={16}/>}
+                            {dir === 'DOWN' && <ArrowDown size={16}/>}
+                            {dir === 'LEFT' && <ArrowLeft size={16}/>}
+                            {dir === 'RIGHT' && <ArrowRight size={16}/>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedControl.type === 'MACRO' && (
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between px-2">
+                        <span className="text-[10px] font-black uppercase text-white/30 italic">Macro Steps</span>
+                        <button onClick={handleAddMacroStep} className="p-1 bg-cyan-500/10 text-cyan-500 rounded-lg hover:bg-cyan-500/20 active:scale-90"><Plus size={16}/></button>
+                      </div>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
+                        {selectedControl.macroSteps?.map((step, idx) => (
+                          <div key={step.id} className="bg-black/40 border border-white/5 rounded-2xl p-3 flex items-center gap-3 animate-in slide-in-from-right-2">
+                            <span className="text-[9px] font-black text-white/10 w-4">{idx + 1}</span>
+                            <input 
+                              type="text" 
+                              value={step.key} 
+                              onChange={(e) => handleUpdateMacroStep(step.id, { key: e.target.value.toUpperCase() })}
+                              className="w-10 bg-black/60 border border-white/10 rounded-lg py-1 text-center font-black text-cyan-400 text-xs"
+                            />
+                            <div className="flex-1 flex items-center gap-2">
+                              <Timer size={12} className="text-white/20"/>
+                              <input 
+                                type="number" 
+                                value={step.delay} 
+                                onChange={(e) => handleUpdateMacroStep(step.id, { delay: parseInt(e.target.value) || 0 })}
+                                className="w-full bg-transparent font-mono text-[11px] text-white/50 focus:text-white outline-none"
+                              />
+                              <span className="text-[9px] font-bold text-white/10">ms</span>
+                            </div>
+                            <button onClick={() => handleRemoveMacroStep(step.id)} className="text-red-500/30 hover:text-red-500 active:scale-90"><X size={14}/></button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -382,11 +495,11 @@ const App: React.FC = () => {
 };
 
 const MenuCard = ({ icon, label, active, onClick }: any) => (
-  <button onClick={onClick} className={`p-7 rounded-[2.5rem] flex flex-col items-center gap-4 border transition-all active:scale-95 ${active ? 'bg-[#161b22] border-white/10' : 'bg-white/5 border-transparent opacity-40 grayscale pointer-events-none'}`}><div className={active ? 'text-cyan-400' : 'text-white/20'}>{icon}</div><span className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</span></button>
+  <button onClick={onClick} className={`p-7 rounded-[2.5rem] flex flex-col items-center gap-4 border transition-all active:scale-95 ${active ? 'bg-[#161b22] border-white/10 shadow-lg' : 'bg-white/5 border-transparent opacity-40 grayscale pointer-events-none'}`}><div className={active ? 'text-cyan-400' : 'text-white/20'}>{icon}</div><span className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</span></button>
 );
 
-const ToolBtn = ({ icon, active, onClick }: any) => (
-  <button onClick={onClick} className={`p-4 rounded-3xl transition-all active:scale-90 ${active ? 'bg-cyan-600 text-white shadow-lg' : 'text-white/30 hover:bg-white/10'}`}>{icon}</button>
+const ToolBtn = ({ icon, active, onClick, title }: any) => (
+  <button onClick={onClick} title={title} className={`p-4 rounded-3xl transition-all active:scale-90 ${active ? 'bg-cyan-600 text-white shadow-lg' : 'text-white/30 hover:bg-white/10'}`}>{icon}</button>
 );
 
 const SensiSlider = ({ label, value, onChange }: any) => (
@@ -403,7 +516,6 @@ const DraggableControl = ({ control, editMode, isSelected, onSelect, onDrag, can
   const handlePointerMove = useCallback((e: PointerEvent) => {
     if (isDragging && canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
-      // Cálculo de coordenadas com clamping (fronteiras)
       const x = ((e.clientX - rect.left) / rect.width) * 100;
       const y = ((e.clientY - rect.top) / rect.height) * 100;
       onDrag(Math.max(0, Math.min(100, x)), Math.max(0, Math.min(100, y)));
@@ -413,10 +525,11 @@ const DraggableControl = ({ control, editMode, isSelected, onSelect, onDrag, can
   const handlePointerUp = useCallback((e: PointerEvent) => {
     if (isDragging) {
       setIsDragging(false);
-      // Libera o "sequestro" do ponteiro
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     }
   }, [isDragging]);
+
+  const isMacroPulse = control.type === 'MACRO' && isSelected;
 
   return (
     <div 
@@ -425,20 +538,29 @@ const DraggableControl = ({ control, editMode, isSelected, onSelect, onDrag, can
           e.stopPropagation(); 
           setIsDragging(true); 
           onSelect(); 
-          // CRÍTICO PARA APK: Captura o ponteiro para garantir que o movimento não se perca
           (e.target as HTMLElement).setPointerCapture(e.pointerId);
         } 
       }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className={`absolute flex items-center justify-center rounded-full transition-shadow ${editMode ? 'cursor-move touch-none active:scale-110' : 'pointer-events-none'} ${isSelected ? 'ring-4 ring-cyan-500 bg-cyan-500/20 shadow-2xl z-[100]' : 'bg-black/50 border-2 border-white/20 z-[50]'}`}
+      className={`absolute flex items-center justify-center rounded-full transition-all ${editMode ? 'cursor-move touch-none active:scale-110' : 'pointer-events-none'} ${isSelected ? 'ring-4 ring-cyan-500 bg-cyan-500/20 shadow-2xl z-[100]' : 'bg-black/50 border-2 border-white/20 z-[50]'} ${isMacroPulse ? 'macro-pulse-active ring-cyan-400' : ''}`}
       style={{ left: `${control.x}%`, top: `${control.y}%`, width: `${size}px`, height: `${size}px`, transform: 'translate(-50%, -50%)', opacity: editMode ? 1 : (control.opacity / 100) }}
     >
-      <div className="flex flex-col items-center text-white/90">
+      <div className="flex flex-col items-center text-white/90 relative w-full h-full justify-center">
         {control.type === 'WASD' && <Move size={size * 0.4} className="text-green-500"/>}
         {control.type === 'VISTA' && <Crosshair size={size * 0.4} className="text-cyan-400"/>}
         {control.type === 'FIRE' && <Flame size={size * 0.4} className="text-orange-500"/>}
+        {control.type === 'MACRO' && <Terminal size={size * 0.4} className="text-cyan-500"/>}
+        {control.type === 'TAP' && <Fingerprint size={size * 0.4} className="text-blue-400"/>}
+        {control.type === 'SWIPE' && (
+          <div className="flex flex-col items-center">
+             <div className={`transition-transform duration-300 ${control.swipeDirection === 'DOWN' ? 'rotate-180' : control.swipeDirection === 'LEFT' ? '-rotate-90' : control.swipeDirection === 'RIGHT' ? 'rotate-90' : ''}`}>
+               <ArrowUp size={size * 0.5} className="text-purple-400" />
+             </div>
+             <div className="absolute -bottom-1 w-full h-1 bg-purple-500/20 rounded-full blur-sm"></div>
+          </div>
+        )}
         <span className="text-[10px] font-black uppercase italic leading-none mt-1 select-none pointer-events-none">{control.key}</span>
       </div>
     </div>

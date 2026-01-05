@@ -3,6 +3,12 @@ export type ControlType = 'TAP' | 'WASD' | 'VISTA' | 'FIRE' | 'MACRO' | 'SWIPE' 
 
 export type ActivationStatus = 'INACTIVE' | 'PENDING' | 'ACTIVE' | 'ERROR' | 'SHIZUKU_WAITING' | 'PAIRING_REQUIRED';
 
+export interface MacroStep {
+  id: string;
+  key: string;
+  delay: number; // ms
+}
+
 export interface MappingControl {
   id: string;
   type: ControlType;
@@ -15,6 +21,8 @@ export interface MappingControl {
   bgColor?: string;
   borderStyle?: 'solid' | 'dashed' | 'dotted';
   borderWidth?: number;
+  macroSteps?: MacroStep[];
+  swipeDirection?: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 }
 
 export interface SensitivitySettings {

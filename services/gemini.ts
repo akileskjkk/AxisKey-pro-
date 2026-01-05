@@ -1,13 +1,13 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 /**
  * Detects common mobile game HUD elements from a base64 encoded image.
  * Uses Gemini 3 Flash for efficient image analysis and structured JSON output.
  */
 export const detectGameHUD = async (imageBase64: string) => {
+  // Always create a fresh instance before API calls as per senior guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const model = "gemini-3-flash-preview";
   
   const prompt = `Analyze this mobile game HUD screenshot. Identify exactly where the key controls are located. 
