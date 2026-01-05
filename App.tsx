@@ -7,9 +7,8 @@ import {
   RefreshCw, Smartphone, CheckCircle2,
   Terminal, Monitor, Radio, Power, MousePointer,
   ChevronRight, Gauge, SlidersHorizontal,
-  ChevronUp, ChevronDown, ChevronRight as ChevronRightIcon, ChevronLeft as ChevronLeftIcon,
-  Info, ZapOff, FastForward, Timer, Lock, Unlock, Wifi, HardDrive, Cpu as CpuIcon,
-  ShieldAlert, Scan, ExternalLink, Key
+  Info, ZapOff, Lock, Unlock, Wifi, HardDrive, Cpu as CpuIcon,
+  ShieldAlert
 } from 'lucide-react';
 import { Game, MappingControl, ControlType, MappingProfile, SensitivitySettings, AppConfig, DeviceHardware } from './types';
 
@@ -70,6 +69,12 @@ const App: React.FC = () => {
       }
     }));
   });
+
+  // Persistência automática
+  useEffect(() => {
+    localStorage.setItem('axiskey_v18_games', JSON.stringify(games));
+    localStorage.setItem('axiskey_v18_cfg', JSON.stringify(appConfig));
+  }, [games, appConfig]);
 
   const [activeGameId, setActiveGameId] = useState<string | null>(null);
   const [selectedControlId, setSelectedControlId] = useState<string | null>(null);
@@ -156,7 +161,7 @@ const App: React.FC = () => {
       x: 50,
       y: 50,
       key: type === 'WASD' ? 'WASD' : (type === 'VISTA' ? 'F1' : (type === 'FIRE' ? 'LMB' : '?')),
-      size: type === 'WASD' ? 120 : 60,
+      size: type === 'WASD' ? 140 : 65,
       opacity: 80
     };
     updateActiveProfile({ controls: [...currentProfile.controls, newControl] });
@@ -169,21 +174,21 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#090c13] text-white flex flex-col font-sans overflow-hidden relative select-none">
+    <div className="h-screen bg-[#090c13] text-white flex flex-col font-sans overflow-hidden relative select-none touch-none">
       
-      {/* HUD DE PERFORMANCE */}
+      {/* PERFORMANCE HUD (VISÍVEL APENAS NO MAPPER OU HOME) */}
       <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-5 bg-black/90 backdrop-blur-3xl px-6 py-2.5 rounded-full border border-cyan-500/20 shadow-2xl pointer-events-none transition-all">
         <div className="flex items-center gap-2">
           <Activity size={12} className="text-cyan-400" />
-          <span className="text-[10px] font-black uppercase text-white/30">Display:</span>
-          <span className="text-[11px] font-mono font-bold text-cyan-400">{hardware.refreshRate}Hz</span>
+          <span className="text-[10px] font-black uppercase text-white/30">FPS:</span>
+          <span className="text-[11px] font-mono font-bold text-cyan-400">{hardware.refreshRate}</span>
         </div>
         <div className="w-px h-3 bg-white/10"></div>
         <div className="flex items-center gap-2">
-          <MousePointer size={12} className={isPointerLocked ? 'text-green-400' : 'text-red-500'} />
-          <span className="text-[10px] font-black uppercase text-white/30">Input:</span>
-          <span className={`text-[11px] font-mono font-bold ${isPointerLocked ? 'text-green-400' : 'text-red-500'}`}>
-            {isPointerLocked ? 'RAW LOCKED' : 'SYSTEM'}
+          <MousePointer size={12} className={appConfig.activationStatus === 'ACTIVE' ? 'text-green-400' : 'text-red-500'} />
+          <span className="text-[10px] font-black uppercase text-white/30">HID:</span>
+          <span className={`text-[11px] font-mono font-bold ${appConfig.activationStatus === 'ACTIVE' ? 'text-green-400' : 'text-red-500'}`}>
+            {appConfig.activationStatus === 'ACTIVE' ? 'READY' : 'WAIT'}
           </span>
         </div>
       </div>
@@ -193,18 +198,18 @@ const App: React.FC = () => {
         <div className="flex-1 flex flex-col items-center p-6 animate-in fade-in duration-500 overflow-y-auto no-scrollbar">
           <div className="mt-12 mb-12 flex flex-col items-center">
             <div className="relative group">
-              <div className="w-40 h-40 rounded-[2.8rem] bg-[#0d1117] flex items-center justify-center border border-white/5 shadow-[0_30px_100px_rgba(14,98,254,0.3)]">
+              <div className="w-36 h-36 rounded-[2.8rem] bg-[#0d1117] flex items-center justify-center border border-white/5 shadow-[0_30px_100px_rgba(14,98,254,0.3)]">
                 <img src={AXIS_LOGO_URL} alt="AxisKey Logo" className="w-full h-full object-cover key-glow scale-110" />
               </div>
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-cyan-600 px-5 py-1.5 rounded-full text-[10px] font-black border-2 border-[#090c13] shadow-xl uppercase italic">v18.0 Real-Drive</div>
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-cyan-600 px-5 py-1.5 rounded-full text-[10px] font-black border-2 border-[#090c13] shadow-xl uppercase italic">v18.0 APK PRE-BUILD</div>
             </div>
-            <h1 className="mt-10 text-3xl font-black uppercase italic tracking-tighter text-white/90">AxisKey Pro</h1>
+            <h1 className="mt-8 text-3xl font-black uppercase italic tracking-tighter text-white/90">AxisKey Pro</h1>
           </div>
 
           <div className="max-w-md mx-auto w-full space-y-6 pb-12">
             <div 
               onClick={() => setView('ACTIVATION')}
-              className={`group w-full p-8 rounded-[2.5rem] flex items-center justify-between cursor-pointer transition-all border-2 ${appConfig.activationStatus === 'ACTIVE' ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20 shadow-red-500/10 animate-pulse'}`}
+              className={`group w-full p-8 rounded-[2.5rem] flex items-center justify-between cursor-pointer transition-all border-2 active:scale-95 ${appConfig.activationStatus === 'ACTIVE' ? 'bg-green-500/5 border-green-500/20 active-pulse' : 'bg-red-500/5 border-red-500/20 shadow-red-500/10 animate-pulse'}`}
             >
               <div className="flex items-center gap-5">
                 <div className={`p-4 rounded-3xl ${appConfig.activationStatus === 'ACTIVE' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-500'}`}>
@@ -212,10 +217,10 @@ const App: React.FC = () => {
                 </div>
                 <div>
                   <p className={`font-black text-xl uppercase italic leading-none ${appConfig.activationStatus === 'ACTIVE' ? 'text-green-400' : 'text-red-400'}`}>
-                    {appConfig.activationStatus === 'ACTIVE' ? 'Mapeamento Ativo' : 'Ativação Necessária'}
+                    {appConfig.activationStatus === 'ACTIVE' ? 'Driver Ativo' : 'Ação Necessária'}
                   </p>
                   <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.2em] mt-2">
-                    {appConfig.activationStatus === 'ACTIVE' ? `Via ${appConfig.activationMethod}` : 'Exige Shizuku ou Wireless ADB'}
+                    {appConfig.activationStatus === 'ACTIVE' ? `Via ${appConfig.activationMethod}` : 'Exige Shizuku p/ Android 11+'}
                   </p>
                 </div>
               </div>
@@ -223,12 +228,12 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <MenuCard icon={<SlidersHorizontal size={24}/>} label="Overclock" active={appConfig.activationStatus === 'ACTIVE'} onClick={() => setShowSensiModal(true)} />
+              <MenuCard icon={<SlidersHorizontal size={24}/>} label="Sensibilidade" active={appConfig.activationStatus === 'ACTIVE'} onClick={() => setShowSensiModal(true)} />
               <MenuCard icon={<CpuIcon size={24}/>} label="Hardware" active={true} onClick={() => setView('HARDWARE')} />
             </div>
 
             <div className="space-y-4 pt-6">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/10 pl-2">Meus Jogos</h3>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/10 pl-2 italic">Biblioteca de Jogos</h3>
               {games.map(game => (
                 <div 
                   key={game.id} 
@@ -236,12 +241,12 @@ const App: React.FC = () => {
                     if(appConfig.activationStatus !== 'ACTIVE') setView('ACTIVATION');
                     else { setActiveGameId(game.id); setView('MAPPER'); }
                   }} 
-                  className={`bg-[#161b22] border border-white/5 p-4 rounded-[2.2rem] flex items-center gap-4 hover:bg-[#1c2128] transition-all cursor-pointer group shadow-xl ${appConfig.activationStatus !== 'ACTIVE' ? 'opacity-50 grayscale' : ''}`}
+                  className={`bg-[#161b22] border border-white/5 p-4 rounded-[2.2rem] flex items-center gap-4 hover:bg-[#1c2128] active:scale-95 transition-all cursor-pointer group shadow-xl ${appConfig.activationStatus !== 'ACTIVE' ? 'opacity-50 grayscale' : ''}`}
                 >
                   <img src={game.icon} className="w-14 h-14 rounded-2xl shadow-lg" />
                   <div className="flex-1">
                     <p className="font-black text-[15px] text-white/90 italic">{game.name}</p>
-                    <span className="text-[9px] font-bold bg-cyan-500/10 text-cyan-500 px-2 py-0.5 rounded-full uppercase">Engine Sincronizada</span>
+                    <span className="text-[9px] font-bold bg-cyan-500/10 text-cyan-500 px-2 py-0.5 rounded-full uppercase">Sincronizado</span>
                   </div>
                   <Rocket size={20} className="text-cyan-500" />
                 </div>
@@ -255,14 +260,14 @@ const App: React.FC = () => {
       {view === 'ACTIVATION' && (
         <div className="flex-1 flex flex-col p-6 animate-in slide-in-from-bottom-8">
           <header className="flex items-center gap-4 mb-8">
-            <button onClick={() => setView('HOME')} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"><ChevronLeft/></button>
-            <h2 className="text-2xl font-black uppercase italic tracking-tighter">Handshake HID</h2>
+            <button onClick={() => setView('HOME')} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors active:scale-90"><ChevronLeft/></button>
+            <h2 className="text-2xl font-black uppercase italic tracking-tighter">Ativação Real-Drive</h2>
           </header>
 
           <div className="max-w-md mx-auto w-full flex-1 flex flex-col space-y-8">
             <div className="flex p-1 bg-black/40 rounded-3xl border border-white/5">
               <button onClick={() => setActiveTab('SHIZUKU')} className={`flex-1 py-4 rounded-2xl font-black uppercase italic text-[11px] transition-all flex items-center justify-center gap-2 ${activeTab === 'SHIZUKU' ? 'bg-[#0e62fe] text-white' : 'text-white/20'}`}><Smartphone size={16} /> Shizuku</button>
-              <button onClick={() => setActiveTab('WIRELESS')} className={`flex-1 py-4 rounded-2xl font-black uppercase italic text-[11px] transition-all flex items-center justify-center gap-2 ${activeTab === 'WIRELESS' ? 'bg-[#0e62fe] text-white' : 'text-white/20'}`}><Wifi size={16} /> Wireless</button>
+              <button onClick={() => setActiveTab('WIRELESS')} className={`flex-1 py-4 rounded-2xl font-black uppercase italic text-[11px] transition-all flex items-center justify-center gap-2 ${activeTab === 'WIRELESS' ? 'bg-[#0e62fe] text-white' : 'text-white/20'}`}><Wifi size={16} /> Wireless ADB</button>
             </div>
 
             <div className="flex-1 space-y-6">
@@ -271,21 +276,21 @@ const App: React.FC = () => {
                   <div className="w-24 h-24 bg-cyan-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto border border-cyan-500/20"><HardDrive className="text-cyan-500" size={48} /></div>
                   <div className="space-y-2">
                     <h3 className="font-black text-xl uppercase italic">Shizuku Binder</h3>
-                    <p className="text-[11px] text-white/30 font-bold uppercase tracking-widest leading-relaxed">Libere o driver real-drive sem PC ou ROOT.</p>
+                    <p className="text-[11px] text-white/30 font-bold uppercase tracking-widest leading-relaxed">O Shizuku permite que o mapeador funcione nativamente sem ROOT.</p>
                   </div>
-                  <button onClick={handleShizukuActivation} disabled={isActivating} className="w-full py-6 bg-cyan-600 rounded-[2rem] font-black uppercase italic text-[13px] shadow-2xl disabled:opacity-40">{isActivating ? <Loader2 className="animate-spin mx-auto" /> : 'Vincular Binder'}</button>
+                  <button onClick={handleShizukuActivation} disabled={isActivating} className="w-full py-6 bg-cyan-600 rounded-[2rem] font-black uppercase italic text-[13px] shadow-2xl active:scale-95 disabled:opacity-40">{isActivating ? <Loader2 className="animate-spin mx-auto" /> : 'Parear com Shizuku'}</button>
                 </div>
               ) : (
                 <div className="bg-[#161b22] border border-white/10 p-8 rounded-[3rem] space-y-6 shadow-2xl">
                   <div className="flex flex-col items-center text-center space-y-2 mb-4"><Wifi size={32} className="text-blue-500" /><h3 className="font-black text-xl uppercase italic">ADB Wireless</h3></div>
                   <div className="space-y-4">
-                    <input type="text" value={ipAddress} onChange={e => setIpAddress(e.target.value)} className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-cyan-400 font-mono text-sm focus:border-cyan-500 outline-none" placeholder="IP Address" />
+                    <input type="text" value={ipAddress} onChange={e => setIpAddress(e.target.value)} className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-cyan-400 font-mono text-sm focus:border-cyan-500 outline-none" placeholder="192.168.1.X" />
                     <div className="grid grid-cols-2 gap-4">
                       <input type="text" placeholder="Porta" value={pairingData.port} onChange={e => setPairingData({...pairingData, port: e.target.value})} className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-cyan-400 font-mono text-sm focus:border-cyan-500 outline-none" />
                       <input type="text" placeholder="Código" value={pairingData.code} onChange={e => setPairingData({...pairingData, code: e.target.value})} className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-cyan-400 font-mono text-sm focus:border-cyan-500 outline-none" />
                     </div>
                   </div>
-                  <button onClick={handleWirelessActivation} disabled={isActivating} className="w-full py-6 bg-blue-600 rounded-[2rem] font-black uppercase italic text-[13px] shadow-2xl disabled:opacity-40">{isActivating ? <Loader2 className="animate-spin mx-auto" /> : 'Parear Wireless'}</button>
+                  <button onClick={handleWirelessActivation} disabled={isActivating} className="w-full py-6 bg-blue-600 rounded-[2rem] font-black uppercase italic text-[13px] shadow-2xl active:scale-95 disabled:opacity-40">{isActivating ? <Loader2 className="animate-spin mx-auto" /> : 'Ativar ADB'}</button>
                 </div>
               )}
               <div className="w-full bg-black/60 rounded-[2.5rem] p-6 font-mono text-[10px] text-cyan-500/60 h-40 overflow-y-auto no-scrollbar border border-white/5 shadow-inner">
@@ -314,6 +319,7 @@ const App: React.FC = () => {
               />
             ))}
 
+            {/* BARRA DE FERRAMENTAS DO MAPPER */}
             <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-[#161b22]/95 backdrop-blur-2xl p-2 rounded-[2.2rem] border border-white/10 shadow-2xl z-[5000]">
               <ToolBtn icon={<Eye size={22}/>} active={!isHUDVisible} onClick={() => setIsHUDVisible(!isHUDVisible)} />
               <div className="w-px h-6 bg-white/10 mx-1"></div>
@@ -336,7 +342,7 @@ const App: React.FC = () => {
                   <span className="text-[10px] font-black uppercase text-cyan-500 italic">{selectedControl.type} NODE</span>
                   <button onClick={() => { updateActiveProfile({ controls: currentProfile!.controls.filter(c => c.id !== selectedControlId) }); setSelectedControlId(null); }} className="text-red-500/50"><Trash2 size={16}/></button>
                 </div>
-                <button onClick={() => setIsListeningForKey(true)} className="w-full py-4 bg-black/40 border border-white/5 rounded-2xl text-2xl font-black text-cyan-500 shadow-inner uppercase italic">{selectedControl.key}</button>
+                <button onClick={() => setIsListeningForKey(true)} className="w-full py-4 bg-black/40 border border-white/5 rounded-2xl text-2xl font-black text-cyan-500 shadow-inner uppercase italic active:scale-95">{selectedControl.key}</button>
               </div>
             )}
           </div>
@@ -348,17 +354,17 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-3xl flex items-center justify-center p-6" onClick={() => setShowSensiModal(false)}>
           <div className="bg-[#161b22] w-full max-w-sm border border-white/10 rounded-[3.5rem] p-10 space-y-10 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4"><Target size={30} className="text-blue-500" /><h3 className="text-xl font-black uppercase italic tracking-tighter">Precision Drive</h3></div>
+              <div className="flex items-center gap-4"><Target size={30} className="text-blue-500" /><h3 className="text-xl font-black uppercase italic tracking-tighter">Precisão BS5</h3></div>
               <button onClick={() => setShowSensiModal(false)}><X size={22} className="text-white/20"/></button>
             </div>
             <div className="space-y-8 h-[380px] overflow-y-auto no-scrollbar pr-2">
               <SensiSlider label="Sensi X" value={currentProfile?.sensitivity.xSensitivity || 0.85} onChange={v => updateSensitivity({ xSensitivity: v })} />
               <SensiSlider label="Sensi Y" value={currentProfile?.sensitivity.ySensitivity || 0.65} onChange={v => updateSensitivity({ ySensitivity: v })} />
               <div className="bg-black/40 p-6 rounded-[2.5rem] border border-white/5 space-y-6">
-                <div className="flex items-center justify-between"><span className="text-[12px] font-black uppercase text-white/50 italic">Tweak (BS5)</span><input type="number" value={currentProfile?.sensitivity.tweaks || 16450} onChange={e => updateSensitivity({ tweaks: parseInt(e.target.value) })} className="w-24 bg-black border border-white/10 rounded-xl p-3 text-cyan-400 font-mono text-center font-bold" /></div>
+                <div className="flex items-center justify-between"><span className="text-[12px] font-black uppercase text-white/50 italic">Tweak BS5</span><input type="number" value={currentProfile?.sensitivity.tweaks || 16450} onChange={e => updateSensitivity({ tweaks: parseInt(e.target.value) })} className="w-24 bg-black border border-white/10 rounded-xl p-3 text-cyan-400 font-mono text-center font-bold" /></div>
               </div>
             </div>
-            <button onClick={() => setShowSensiModal(false)} className="w-full py-6 bg-blue-600 rounded-[2rem] font-black uppercase italic shadow-2xl tracking-widest">Sincronizar Driver</button>
+            <button onClick={() => setShowSensiModal(false)} className="w-full py-6 bg-blue-600 rounded-[2rem] font-black uppercase italic shadow-2xl tracking-widest active:scale-95">Sincronizar Driver</button>
           </div>
         </div>
       )}
@@ -367,8 +373,8 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[11000] bg-black/95 flex flex-col items-center justify-center p-10 animate-in fade-in">
            <div className="w-32 h-32 bg-cyan-500/10 rounded-[3rem] flex items-center justify-center border border-cyan-500/20 animate-pulse mb-8"><Keyboard size={64} className="text-cyan-500" /></div>
            <h3 className="text-3xl font-black uppercase italic mb-2">Aguardando HID</h3>
-           <p className="text-[11px] text-white/20 font-bold uppercase tracking-[0.4em]">Pressione uma tecla ou botão do mouse</p>
-           <button onClick={() => setIsListeningForKey(false)} className="mt-12 px-8 py-3 bg-white/5 rounded-full text-[10px] font-black uppercase tracking-widest text-white/30">Cancelar</button>
+           <p className="text-[11px] text-white/20 font-bold uppercase tracking-[0.4em]">Pressione uma tecla ou botão</p>
+           <button onClick={() => setIsListeningForKey(false)} className="mt-12 px-8 py-3 bg-white/5 rounded-full text-[10px] font-black uppercase tracking-widest text-white/30 active:scale-90">Cancelar</button>
         </div>
       )}
     </div>
@@ -392,32 +398,25 @@ const SensiSlider = ({ label, value, onChange }: any) => (
 
 const DraggableControl = ({ control, editMode, isSelected, onSelect, onDrag, canvasRef }: any) => {
   const [isDragging, setIsDragging] = useState(false);
-  const dragOffset = useRef({ x: 0, y: 0 });
   const size = control.size || 64;
 
   const handlePointerMove = useCallback((e: PointerEvent) => {
     if (isDragging && canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
+      // Cálculo de coordenadas com clamping (fronteiras)
       const x = ((e.clientX - rect.left) / rect.width) * 100;
       const y = ((e.clientY - rect.top) / rect.height) * 100;
       onDrag(Math.max(0, Math.min(100, x)), Math.max(0, Math.min(100, y)));
     }
   }, [isDragging, onDrag, canvasRef]);
 
-  const handlePointerUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  useEffect(() => {
+  const handlePointerUp = useCallback((e: PointerEvent) => {
     if (isDragging) {
-      window.addEventListener('pointermove', handlePointerMove);
-      window.addEventListener('pointerup', handlePointerUp);
+      setIsDragging(false);
+      // Libera o "sequestro" do ponteiro
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     }
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [isDragging, handlePointerMove, handlePointerUp]);
+  }, [isDragging]);
 
   return (
     <div 
@@ -426,16 +425,21 @@ const DraggableControl = ({ control, editMode, isSelected, onSelect, onDrag, can
           e.stopPropagation(); 
           setIsDragging(true); 
           onSelect(); 
+          // CRÍTICO PARA APK: Captura o ponteiro para garantir que o movimento não se perca
+          (e.target as HTMLElement).setPointerCapture(e.pointerId);
         } 
       }}
-      className={`absolute flex items-center justify-center rounded-full transition-shadow ${editMode ? 'cursor-move touch-none' : 'pointer-events-none'} ${isSelected ? 'ring-4 ring-cyan-500 bg-cyan-500/20 scale-110 shadow-2xl z-[100]' : 'bg-black/50 border-2 border-white/20 z-[50]'}`}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      className={`absolute flex items-center justify-center rounded-full transition-shadow ${editMode ? 'cursor-move touch-none active:scale-110' : 'pointer-events-none'} ${isSelected ? 'ring-4 ring-cyan-500 bg-cyan-500/20 shadow-2xl z-[100]' : 'bg-black/50 border-2 border-white/20 z-[50]'}`}
       style={{ left: `${control.x}%`, top: `${control.y}%`, width: `${size}px`, height: `${size}px`, transform: 'translate(-50%, -50%)', opacity: editMode ? 1 : (control.opacity / 100) }}
     >
       <div className="flex flex-col items-center text-white/90">
         {control.type === 'WASD' && <Move size={size * 0.4} className="text-green-500"/>}
         {control.type === 'VISTA' && <Crosshair size={size * 0.4} className="text-cyan-400"/>}
         {control.type === 'FIRE' && <Flame size={size * 0.4} className="text-orange-500"/>}
-        <span className="text-[10px] font-black uppercase italic leading-none mt-1 select-none">{control.key}</span>
+        <span className="text-[10px] font-black uppercase italic leading-none mt-1 select-none pointer-events-none">{control.key}</span>
       </div>
     </div>
   );
