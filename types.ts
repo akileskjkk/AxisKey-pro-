@@ -1,7 +1,7 @@
 
 export type ControlType = 'TAP' | 'WASD' | 'VISTA' | 'FIRE' | 'MACRO' | 'SWIPE' | 'SMART_AIM';
 
-export type ActivationStatus = 'INACTIVE' | 'PENDING' | 'ACTIVE' | 'ERROR' | 'SHIZUKU_WAITING';
+export type ActivationStatus = 'INACTIVE' | 'PENDING' | 'ACTIVE' | 'ERROR' | 'SHIZUKU_WAITING' | 'PAIRING_REQUIRED';
 
 export interface MappingControl {
   id: string;
@@ -27,6 +27,7 @@ export interface SensitivitySettings {
   deadZone: number;
   scanRate: number;
   smoothing: number;
+  mousePollingRate: 125 | 250 | 500 | 1000 | 2000;
 }
 
 export interface MappingProfile {
@@ -44,6 +45,7 @@ export interface DeviceHardware {
   gpuVendor: string;
   androidVersion: string;
   deviceName: string;
+  refreshRate: number;
   ramEstimate?: string;
 }
 
