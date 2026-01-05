@@ -1,9 +1,7 @@
 {
-  "name": "AxisKey Pro: Master Mapper",
-  "description": "The ultimate key-mapping solution for mobile gamers. Professional sensitivity controls, AI-powered HUD detection, and ultra-low latency input engine.",
-  "requestFramePermissions": [
-    "camera"
-  ],
+  "name": "AxisKey Pro: Precision Mapper",
+  "description": "The ultimate hardware-direct key-mapping solution for mobile gamers. Professional sensitivity controls, BlueStacks-spec engine, and zero-latency input.",
+  "requestFramePermissions": [],
   "permissions": [
     "vibrate"
   ]
